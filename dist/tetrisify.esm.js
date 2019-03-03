@@ -332,24 +332,13 @@ const generatePieceSequence = (game) => {
 	return sequence;
 };
 
-function tetrisify(selector, options) {
-
-	const $wrapper = document.querySelector(selector);
-	const $image = document.querySelector(selector + ' img');
-
-	if (!$wrapper) {
-		throw new Error('Tetrisify: Wrapper element not found.')
-	}
-
-	if (!$image) {
-		throw new Error('Tetrisify: Image not found inside the wrapper')
-	}
-
-	// Initialize the game
-	const game = new Game($wrapper, options);
-
-	// Generate a random sequence of pieces that form the puzzle
-	const pieces = generatePieceSequence(game);
+/**
+ * Animate piece by piece until the entire puzzle is composed
+ * @param {Game} game A game object
+ * @param {Array} pieces A sequence of pieces that compose a puzzle
+ * @param {number} speed Step duration in miliseconds
+ */
+const animatePieces = (game, pieces, speed) => {
 	const interval = setInterval(() => {
 
 		const currentPiece = pieces.find(p => p.state !== 'Done');
@@ -386,16 +375,31 @@ function tetrisify(selector, options) {
 			currentPiece.state = 'Falling';
 		}
 
+	}, speed);
 
-		
-	}, 500);
+};
 
+function tetrisify(selector, options) {
 
-	//console.log(game)
+	const $wrapper = document.querySelector(selector);
+	const $image = document.querySelector(selector + ' img');
 
-	/**
-	 * 
-	*/
+	if (!$wrapper) {
+		throw new Error('Tetrisify: Wrapper element not found.')
+	}
+
+	if (!$image) {
+		throw new Error('Tetrisify: Image not found inside the wrapper')
+	}
+
+	// Initialize the game
+	const game = new Game($wrapper, options);
+
+	// Generate a random sequence of pieces that form the puzzle
+	const pieces = generatePieceSequence(game);
+	
+	//Animate piece by piece until the puzzle is completed
+	animatePieces(game, pieces, 200);
 }
 
 export default tetrisify;
