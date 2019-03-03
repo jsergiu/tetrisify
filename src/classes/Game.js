@@ -1,3 +1,4 @@
+import Matrix from 'ml-matrix';
 import Pixel from './Pixel'
 
 export default class Game {
@@ -18,7 +19,7 @@ export default class Game {
 		this.rows = options.rows || parseInt(this.image.height / this.pixelSize)
 
 		this.applyWrapperStyle()
-		this.matrix = this.initializeMatrix(this.rows, this.columns)
+		this.matrix = Matrix.zeros(this.rows, this.columns) // 1 = pixel not used
 	}
 
 	/** Needed so Pieces can have position absolute */
@@ -29,6 +30,18 @@ export default class Game {
 		})
 	}
 
+	/**
+	 * Check if a row has unused pixes
+	 * @param {Number} row Row number (bottom is zero)
+	 * @returns {Boolean}
+	 */
+	rowIsFilled(row) {
+		const rowSums = this.matrix.sum('row');
+		const rowSum = rowSums[this.rows - row - 1][0]
+		return  rowSum === this.columns
+	}
+
+	/*
 	initializeMatrix(rows, columns) {
 		var matrix = []
 		for  (let i = 0; i < rows; i++) {
@@ -46,7 +59,7 @@ export default class Game {
 			}
 		}
 		return matrix
-	}
+	}*/
 
 
 	/**

@@ -1,4 +1,5 @@
 import Game from './classes/Game'
+import { generatePiecesSequence } from './utils/generatePiecesSequence'
 
 export default function tetrisify(selector, options) {
 
@@ -14,7 +15,8 @@ export default function tetrisify(selector, options) {
 	}
 
 	const game = new Game($wrapper, options)
-	console.log(game)
+	generatePiecesSequence(game)
+	//console.log(game)
 
 	/**
 	 * 

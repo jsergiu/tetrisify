@@ -5,9 +5,11 @@
  */
 const pieces = [
 	{
+		name: 'Dot',
+		shape: [[1]],
+	},
+	{
 		name: 'I-piece',
-		width: 1,
-		height: 4,
 		shape: [
 			[1],
 			[1],
@@ -17,8 +19,6 @@ const pieces = [
 	},
 	{
 		name: 'J-piece',
-		width: 2,
-		height: 3,
 		shape: [
 			[0, 1],
 			[0, 1],
@@ -27,8 +27,6 @@ const pieces = [
 	},
 	{
 		name: 'L-piece',
-		width: 2,
-		height: 3,
 		shape: [
 			[1, 0],
 			[1, 0],
@@ -37,30 +35,26 @@ const pieces = [
 	},
 	{
 		name: 'O-piece',
-		width: 2,
-		height: 2,
 		shape: [
 			[1, 1],
 			[1, 1],
 		],
 	},
-	{
+	/*{
 		name: 'S-piece',
-		width: 2,
-		height: 3,
 		shape: [
 			[1, 0],
 			[1, 1],
 			[0, 1],
 		],
-	},
+	},*/
 	{
 		name: 'T-piece',
-		width: 3,
-		height: 2,
 		shape: [
 			[0, 1, 0],
 			[1, 1, 1],
 		],
 	},
 ]
+
+export default pieces

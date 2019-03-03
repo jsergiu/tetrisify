@@ -1,50 +1,8 @@
 'use strict';
 
-class Coordinate {
-	constructor(x,y) {
-		this.x = parseInt(x);
-		this.y = parseInt(y);
-	}
+function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
 
-	getX() {
-		return this.x;
-	}
-
-	getY() {
-		return this.y;
-	}
-}
-
-class Pixel {
-	constructor(image, data) {
-		// Initial data
-		this.coordinate = new Coordinate(data.x, data.y);
-		this.value = data.value || 0; // 0 = unocuppied
-		
-		// Creat div and append
-		this.$div = document.createElement("div");
-		this.setInitialStyle(data.col, data.row);
-	}
-	
-	setInitialStyle(image, data) {
-		const bgX = image.width - this.col * data.size + 'px ';
-		const bgY = (this.row + 1) * data.size + 'px';
-
-		Object.assign(this.$div.style, {
-			width: `${data.size}px`,
-			height: `${data.size}px`,
-			border:  `1px solid #dddddd88`,
-			left: this.col * data.size + 'px',
-			bottom: this.row * data.size + 'px',
-			position:  'absolute',
-
-			// Background
-			background: `url(${image.src})`,
-			backgroundPosition: bgX + bgY,
-			backgroundSize: `${image.widthH}px ${image.height}px`,
-		});
-	}
-}
+var Matrix = _interopDefault(require('ml-matrix'));
 
 class Game {
 	constructor($wrapper, options) {
@@ -64,7 +22,7 @@ class Game {
 		this.rows = options.rows || parseInt(this.image.height / this.pixelSize);
 
 		this.applyWrapperStyle();
-		this.matrix = this.initializeMatrix(this.rows, this.columns);
+		this.matrix = Matrix.zeros(this.rows, this.columns); // 1 = pixel not used
 	}
 
 	/** Needed so Pieces can have position absolute */
@@ -75,24 +33,36 @@ class Game {
 		});
 	}
 
+	/**
+	 * Check if a row has unused pixes
+	 * @param {Number} row Row number (bottom is zero)
+	 * @returns {Boolean}
+	 */
+	rowIsFilled(row) {
+		const rowSums = this.matrix.sum('row');
+		const rowSum = rowSums[this.rows - row - 1][0];
+		return  rowSum === this.columns
+	}
+
+	/*
 	initializeMatrix(rows, columns) {
-		var matrix = [];
+		var matrix = []
 		for  (let i = 0; i < rows; i++) {
 			for  (let j = 0; j < columns ; j++) {
-				if (!matrix[i]) matrix[i] = [];
+				if (!matrix[i]) matrix[i] = []
 				
 				let p = new Pixel(this.image, {
 					row: rows - i - 1,
 					col: j,
 					value: 0,
 					size: this.pixelSize,
-				});
+				})
 
-				matrix[i][j] = p;
+				matrix[i][j] = p
 			}
 		}
 		return matrix
-	}
+	}*/
 
 
 	/**
@@ -111,6 +81,161 @@ class Game {
 
 }
 
+/**
+ * Each piece is represented as a matrix where
+ * 1 = the pixes is on / selected
+ * 0 = the pixes is off / not used
+ */
+const pieces = [
+	{
+		name: 'Dot',
+		shape: [[1]],
+	},
+	{
+		name: 'I-piece',
+		shape: [
+			[1],
+			[1],
+			[1],
+			[1]
+		],
+	},
+	{
+		name: 'J-piece',
+		shape: [
+			[0, 1],
+			[0, 1],
+			[1, 1],
+		],
+	},
+	{
+		name: 'L-piece',
+		shape: [
+			[1, 0],
+			[1, 0],
+			[1, 1],
+		],
+	},
+	{
+		name: 'O-piece',
+		shape: [
+			[1, 1],
+			[1, 1],
+		],
+	},
+	/*{
+		name: 'S-piece',
+		shape: [
+			[1, 0],
+			[1, 1],
+			[0, 1],
+		],
+	},*/
+	{
+		name: 'T-piece',
+		shape: [
+			[0, 1, 0],
+			[1, 1, 1],
+		],
+	},
+];
+
+class Piece {
+	constructor(data) {
+
+		// Type checking
+		if (!data.shape) throw new Error('Tetrisify: shape parameter is missing')
+		if (!data.pixelSize) throw new Error('Tetrisify: pixelSize parameter is missing')
+
+		// Initial datas
+		this.name = data.name;
+		this.shape = data.shape;
+		this.pixelSize = data.pixelSize;
+		this.coordinates = { x: -1000, y: -1000 };
+		
+		// Create div and add css
+		this.$div = document.createElement("div");
+		this.setInitialStyle();
+	}
+	
+	setInitialStyle() {
+		let width = this.shape[0].length;
+		let height = this.shape.length;
+
+		Object.assign(this.$div.style, {
+			width: width * this.pixelSize + 'px',
+			height: height * this.pixelSize + 'px',
+			left: this.coordinates.x * this.pixelSize,
+			bottom: this.coordinates.y * this.pixelSize,
+			position:  'absolute',
+
+			// Background
+			background: getRandomColor(),
+		});
+	}
+
+	setCoordinates(x,y) {
+		this.coordinates.x = x,
+		this.coordinates.y = y;
+		this.$div.style.left = x * this.pixelSize + 'px';
+		this.$div.style.bottom = y * this.pixelSize + 'px';
+	}
+
+}
+
+const getRandomShape = () => {
+	const random = parseInt(Math.random() * pieces.length);
+	return pieces[random];
+};
+
+const getRandomColor = () => {
+	var letters = '0123456789ABCDEF';
+	var color = '#';
+	for (var i = 0; i < 6; i++) {
+		color += letters[Math.floor(Math.random() * 16)];
+	}
+	return color;
+};
+
+const generatePiecesSequence = (game) => {
+
+	// Add pieces to the sequence until each rows is filled
+	for (let row = 0; row < game.rows - 1;) {
+		console.log(`Processing row ${row}`);
+		let done = game.rowIsFilled(0);
+
+		//Add pieces untill the row is filled
+		while (!done) {
+
+			// Get a random shape
+			let randomShape = getRandomShape();
+
+			// Create a piece
+			let piece = new Piece({
+				name: randomShape.name,
+				shape: randomShape.shape,
+				pixelSize: game.pixelSize,
+			});
+
+			//let slot = getRandomSlot(row, piece)
+			console.log(piece);
+			done = true;
+		}
+
+
+		console.log('Row is filled ', done);
+		row++;
+	}
+	
+	//console.log(sequence)
+
+	//let isDone = game.matrix.sum() > game.rows * game.columns - 5;
+	//while (!isDone) {
+	//}
+	console.log(game.matrix.sum());
+
+};
+
 function tetrisify(selector, options) {
 
 	const $wrapper = document.querySelector(selector);
@@ -125,7 +250,8 @@ function tetrisify(selector, options) {
 	}
 
 	const game = new Game($wrapper, options);
-	console.log(game);
+	generatePiecesSequence(game);
+	//console.log(game)
 
 	/**
 	 * 

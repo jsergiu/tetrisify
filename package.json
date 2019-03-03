@@ -27,5 +27,8 @@
     "dist"
   ],
   "author": "Sergiu Munteanu",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "ml-matrix": "^5.2.1"
+  }
 }
