@@ -1,5 +1,5 @@
 import Matrix from 'ml-matrix';
-import Pixel from './Pixel'
+//import Pixel from './Pixel'
 
 export default class Game {
 	constructor($wrapper, options) {
@@ -41,40 +41,43 @@ export default class Game {
 		return  rowSum === this.columns
 	}
 
-	/*
-	initializeMatrix(rows, columns) {
-		var matrix = []
-		for  (let i = 0; i < rows; i++) {
-			for  (let j = 0; j < columns ; j++) {
-				if (!matrix[i]) matrix[i] = []
-				
-				let p = new Pixel(this.image, {
-					row: rows - i - 1,
-					col: j,
-					value: 0,
-					size: this.pixelSize,
-				})
-
-				matrix[i][j] = p
-			}
-		}
-		return matrix
-	}*/
-
-
 	/**
-	 * Print a matrix with only the values for each pixel
+	 * Find a random position for a piece on a specific row
+	 * @param {Number} row Row to search on
+	 * @param {Piece} piece Piece to be fitted
 	 */
-	debug() {
-		let m = []
-		for (let i = 0; i < this.columns; i++) {
-			for (let j = 0; j < this.rows; j++) {
-				if (!m[this.columns - j - 1]) m[this.columns - j - 1] = []
-				m[this.columns - j - 1][i] = this.getPixel(i,j).value
-			}
-		}
-		console.table(m)
-	}
+	getRandomSlot(searchRow, piece) {
+		const availableSlots = [];
+		let pieceWidth = piece.shape[0].length;
+		let pieceHeight = piece.shape.length;
 
+		for (let col = 0; col <= this.columns - pieceWidth; col++) {
+
+			// Get submatrix for the current coordinates
+			const startRow = this.rows - searchRow - pieceHeight;
+			const endRow = this.rows - searchRow - 1;
+			const startColumn = col;
+			const endColumn = col + pieceWidth -1;
+
+			// Check for out of bounds
+			if (startRow < 0 || startColumn < 0) {
+				continue;
+			}
+
+			// Test if the piece fits in the current position by adding the submatrix with the shape
+			const submatrix = this.matrix.subMatrix(startRow, endRow, startColumn, endColumn);
+			const shapeMatrix = new Matrix(piece.shape);
+			const sum = Matrix.add(submatrix, shapeMatrix);
+			const maxIndex = sum.maxIndex();
+			
+			// If 2 is the max it means that the piece overlaps an used pixel in the grid
+			if (sum.get(maxIndex[0], maxIndex[1]) > 1) {
+				continue;
+			}
+
+			availableSlots.push({ row: searchRow, column: col })
+		}
+		console.log('available', availableSlots)
+	}
 }
 	

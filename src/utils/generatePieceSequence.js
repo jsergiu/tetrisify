@@ -1,10 +1,11 @@
-import { getRandomShape } from './utils'
+import Piece from '../classes/Piece';
+import { getRandomShape } from './utils';
 
 /**
  * Generate a sequence of pieces with their coordinates to make up the completed puzzle
  * @param {Object} game 
  */
-const generatePiecesSequence = (game) => {
+const generatePieceSequence = (game) => {
 
 	// The sequence of pieces as an array in cronological order
 	const sequence = [];
@@ -29,9 +30,11 @@ const generatePiecesSequence = (game) => {
 				shape: randomShape.shape,
 				pixelSize: game.pixelSize,
 			})
+			
+			console.log(piece)
+			game.getRandomSlot(row, piece)
 
 			//let slot = getRandomSlot(row, piece)
-			console.log(piece)
 			done = true
 		}
 
@@ -50,4 +53,4 @@ const generatePiecesSequence = (game) => {
 }
 
 
-export default generatePiecesSequence
+export default generatePieceSequence

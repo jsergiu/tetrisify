@@ -1,5 +1,7 @@
 import Matrix from 'ml-matrix';
 
+//import Pixel from './Pixel'
+
 class Game {
 	constructor($wrapper, options) {
 		this.$wrapper = $wrapper;
@@ -40,41 +42,44 @@ class Game {
 		return  rowSum === this.columns
 	}
 
-	/*
-	initializeMatrix(rows, columns) {
-		var matrix = []
-		for  (let i = 0; i < rows; i++) {
-			for  (let j = 0; j < columns ; j++) {
-				if (!matrix[i]) matrix[i] = []
-				
-				let p = new Pixel(this.image, {
-					row: rows - i - 1,
-					col: j,
-					value: 0,
-					size: this.pixelSize,
-				})
-
-				matrix[i][j] = p
-			}
-		}
-		return matrix
-	}*/
-
-
 	/**
-	 * Print a matrix with only the values for each pixel
+	 * Find a random position for a piece on a specific row
+	 * @param {Number} row Row to search on
+	 * @param {Piece} piece Piece to be fitted
 	 */
-	debug() {
-		let m = [];
-		for (let i = 0; i < this.columns; i++) {
-			for (let j = 0; j < this.rows; j++) {
-				if (!m[this.columns - j - 1]) m[this.columns - j - 1] = [];
-				m[this.columns - j - 1][i] = this.getPixel(i,j).value;
-			}
-		}
-		console.table(m);
-	}
+	getRandomSlot(searchRow, piece) {
+		const availableSlots = [];
+		let pieceWidth = piece.shape[0].length;
+		let pieceHeight = piece.shape.length;
 
+		for (let col = 0; col <= this.columns - pieceWidth; col++) {
+
+			// Get submatrix for the current coordinates
+			const startRow = this.rows - searchRow - pieceHeight;
+			const endRow = this.rows - searchRow - 1;
+			const startColumn = col;
+			const endColumn = col + pieceWidth -1;
+
+			// Check for out of bounds
+			if (startRow < 0 || startColumn < 0) {
+				continue;
+			}
+
+			// Test if the piece fits in the current position by adding the submatrix with the shape
+			const submatrix = this.matrix.subMatrix(startRow, endRow, startColumn, endColumn);
+			const shapeMatrix = new Matrix(piece.shape);
+			const sum = Matrix.add(submatrix, shapeMatrix);
+			const maxIndex = sum.maxIndex();
+			
+			// If 2 is the max it means that the piece overlaps an used pixel in the grid
+			if (sum.get(maxIndex[0], maxIndex[1]) > 1) {
+				continue;
+			}
+
+			availableSlots.push({ row: searchRow, column: col });
+		}
+		console.log('available', availableSlots);
+	}
 }
 
 /**
@@ -136,6 +141,20 @@ const pieces = [
 	},
 ];
 
+const getRandomShape = () => {
+	const random = parseInt(Math.random() * pieces.length);
+	return pieces[random];
+};
+
+const getRandomColor = () => {
+	var letters = '0123456789ABCDEF';
+	var color = '#';
+	for (var i = 0; i < 6; i++) {
+		color += letters[Math.floor(Math.random() * 16)];
+	}
+	return color;
+};
+
 class Piece {
 	constructor(data) {
 
@@ -179,25 +198,18 @@ class Piece {
 
 }
 
-const getRandomShape = () => {
-	const random = parseInt(Math.random() * pieces.length);
-	return pieces[random];
-};
-
-const getRandomColor = () => {
-	var letters = '0123456789ABCDEF';
-	var color = '#';
-	for (var i = 0; i < 6; i++) {
-		color += letters[Math.floor(Math.random() * 16)];
-	}
-	return color;
-};
-
-const generatePiecesSequence = (game) => {
+/**
+ * Generate a sequence of pieces with their coordinates to make up the completed puzzle
+ * @param {Object} game 
+ */
+const generatePieceSequence = (game) => {
 
 	// Add pieces to the sequence until each rows is filled
 	for (let row = 0; row < game.rows - 1;) {
+		
 		console.log(`Processing row ${row}`);
+
+		// If the row is filled go to the next row
 		let done = game.rowIsFilled(0);
 
 		//Add pieces untill the row is filled
@@ -212,9 +224,11 @@ const generatePiecesSequence = (game) => {
 				shape: randomShape.shape,
 				pixelSize: game.pixelSize,
 			});
+			
+			console.log(piece);
+			game.getRandomSlot(row, piece);
 
 			//let slot = getRandomSlot(row, piece)
-			console.log(piece);
 			done = true;
 		}
 
@@ -246,7 +260,9 @@ function tetrisify(selector, options) {
 	}
 
 	const game = new Game($wrapper, options);
-	generatePiecesSequence(game);
+	generatePieceSequence(game);
+
+
 	//console.log(game)
 
 	/**
