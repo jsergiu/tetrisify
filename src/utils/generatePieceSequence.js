@@ -50,25 +50,18 @@ const generatePieceSequence = (game) => {
 			game.matrix = Matrix.add(game.matrix, normalizedShapedMatrix);
 
 			// Set piece coordinates and add it to the sequence
-			piece.setCoordinates(piecePosition.column, piecePosition.row);
+			piece.setFinalCoordinates(piecePosition.column, piecePosition.row);
 			sequence.push(piece);
-			game.$wrapper.append(piece.$div);
 
 			done = game.rowIsFilled(row);
 		}
 
-
-		console.log('Row is filled ', done)
+		// Once all the pixels on one row are filled, go to the next row
 		row++;
 	}
 	
 	console.log(sequence)
-
-	//let isDone = game.matrix.sum() > game.rows * game.columns - 5;
-	//while (!isDone) {
-	//}
-	console.log(game.matrix.sum())
-
+	return sequence;
 }
 
 

@@ -3385,6 +3385,18 @@
 
   }
 
+  class Coordinate {
+  	constructor(x,y) {
+  		this.x = parseInt(x);
+  		this.y = parseInt(y);
+  	}
+
+  	getX() { return this.x; }
+  	getY() { return this.y; }
+  	setX(value) { this.x = parseInt(value); }
+  	setY(value) { this.y = parseInt(value); }
+  }
+
   /**
    * Each piece is represented as a matrix where
    * 1 = the pixes is on / selected
@@ -3396,7 +3408,7 @@
   		shape: [[1]],
   	},
   	{
-  		name: 'I-piece',
+  		name: 'I-piece-vertical',
   		shape: [
   			[1],
   			[1],
@@ -3405,7 +3417,13 @@
   		],
   	},
   	{
-  		name: 'J-piece',
+  		name: 'I-piece-horizontal',
+  		shape: [
+  			[1, 1, 1, 1]
+  		],
+  	},
+  	{
+  		name: 'J-piece-vertical',
   		shape: [
   			[0, 1],
   			[0, 1],
@@ -3413,11 +3431,25 @@
   		],
   	},
   	{
-  		name: 'L-piece',
+  		name: 'J-piece-horizontal',
+  		shape: [
+  			[1, 0, 0],
+  			[1, 1, 1],
+  		],
+  	},
+  	{
+  		name: 'L-piece-vertical',
   		shape: [
   			[1, 0],
   			[1, 0],
   			[1, 1],
+  		],
+  	},
+  	{
+  		name: 'L-piece-horizontal',
+  		shape: [
+  			[0, 0, 1],
+  			[1, 1, 1],
   		],
   	},
   	{
@@ -3427,14 +3459,6 @@
   			[1, 1],
   		],
   	},
-  	/*{
-  		name: 'S-piece',
-  		shape: [
-  			[1, 0],
-  			[1, 1],
-  			[0, 1],
-  		],
-  	},*/
   	{
   		name: 'T-piece',
   		shape: [
@@ -3469,7 +3493,15 @@
   		this.name = data.name;
   		this.shape = data.shape;
   		this.pixelSize = data.pixelSize;
-  		this.coordinates = { x: -1000, y: -1000 };
+
+  		// Coordinates used for the falling animation
+  		this.currentCoordinates = new Coordinate(-1000, -1000);
+
+  		// Final coordinates when the pice is in place
+  		this.finalCoordinates = new Coordinate(-1000, -1000);
+  		
+  		// States: [Idle, Falling, Done]
+  		this.state = 'Idle';
   		
   		// Create div and add css
   		this.$div = document.createElement("div");
@@ -3483,8 +3515,6 @@
   		Object.assign(this.$div.style, {
   			width: width * this.pixelSize + 'px',
   			height: height * this.pixelSize + 'px',
-  			left: this.coordinates.x * this.pixelSize,
-  			bottom: this.coordinates.y * this.pixelSize,
   			position:  'absolute',
 
   			// Background
@@ -3492,11 +3522,16 @@
   		});
   	}
 
-  	setCoordinates(x,y) {
-  		this.coordinates.x = x,
-  		this.coordinates.y = y;
+  	setCurrentCoordinates(x,y) {
+  		this.currentCoordinates.setX(x);
+  		this.currentCoordinates.setY(y);
   		this.$div.style.left = x * this.pixelSize + 'px';
   		this.$div.style.bottom = y * this.pixelSize + 'px';
+  	}
+
+  	setFinalCoordinates(x,y) {
+  		this.finalCoordinates.setX(x);
+  		this.finalCoordinates.setY(y);
   	}
 
   }
@@ -3578,25 +3613,18 @@
   			game.matrix = Matrix.add(game.matrix, normalizedShapedMatrix);
 
   			// Set piece coordinates and add it to the sequence
-  			piece.setCoordinates(piecePosition.column, piecePosition.row);
+  			piece.setFinalCoordinates(piecePosition.column, piecePosition.row);
   			sequence.push(piece);
-  			game.$wrapper.append(piece.$div);
 
   			done = game.rowIsFilled(row);
   		}
 
-
-  		console.log('Row is filled ', done);
+  		// Once all the pixels on one row are filled, go to the next row
   		row++;
   	}
   	
   	console.log(sequence);
-
-  	//let isDone = game.matrix.sum() > game.rows * game.columns - 5;
-  	//while (!isDone) {
-  	//}
-  	console.log(game.matrix.sum());
-
+  	return sequence;
   };
 
   function tetrisify(selector, options) {
@@ -3612,8 +3640,50 @@
   		throw new Error('Tetrisify: Image not found inside the wrapper')
   	}
 
+  	// Initialize the game
   	const game = new Game($wrapper, options);
-  	generatePieceSequence(game);
+
+  	// Generate a random sequence of pieces that form the puzzle
+  	const pieces = generatePieceSequence(game);
+  	const interval = setInterval(() => {
+
+  		const currentPiece = pieces.find(p => p.state !== 'Done');
+  		// If all the pieces are done end the animation
+  		if (!currentPiece) {
+  			clearInterval(interval);
+  			return
+  		}
+
+  		const currentX = currentPiece.currentCoordinates.getX();
+  		const currentY = currentPiece.currentCoordinates.getY();
+  		const finalX = currentPiece.finalCoordinates.getX();
+  		const finalY = currentPiece.finalCoordinates.getY();
+  		let nextX = currentX;
+  		let nextY = currentY;
+
+
+  		// Check if the piece is in the final position
+  		if (currentX === finalX && currentY === finalY) {
+  			currentPiece.state = 'Done';
+  		}
+
+  		if (currentPiece.state === 'Falling') {
+  			if (nextX > finalX) { nextX--; }
+  			if (nextX < finalX) { nextX++; }
+  			if (nextY > finalY) { nextY--; }
+  			currentPiece.setCurrentCoordinates(nextX, nextY);
+  		}
+
+  		// If the piece is Idle put it in the start position in the middle or the top row
+  		if (currentPiece.state === 'Idle') {
+  			game.$wrapper.append(currentPiece.$div);
+  			currentPiece.setCurrentCoordinates(game.columns / 2, game.rows - 1);
+  			currentPiece.state = 'Falling';
+  		}
+
+
+  		
+  	}, 500);
 
 
   	//console.log(game)

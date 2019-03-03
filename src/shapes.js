@@ -9,7 +9,7 @@ const pieces = [
 		shape: [[1]],
 	},
 	{
-		name: 'I-piece',
+		name: 'I-piece-vertical',
 		shape: [
 			[1],
 			[1],
@@ -18,7 +18,13 @@ const pieces = [
 		],
 	},
 	{
-		name: 'J-piece',
+		name: 'I-piece-horizontal',
+		shape: [
+			[1, 1, 1, 1]
+		],
+	},
+	{
+		name: 'J-piece-vertical',
 		shape: [
 			[0, 1],
 			[0, 1],
@@ -26,11 +32,25 @@ const pieces = [
 		],
 	},
 	{
-		name: 'L-piece',
+		name: 'J-piece-horizontal',
+		shape: [
+			[1, 0, 0],
+			[1, 1, 1],
+		],
+	},
+	{
+		name: 'L-piece-vertical',
 		shape: [
 			[1, 0],
 			[1, 0],
 			[1, 1],
+		],
+	},
+	{
+		name: 'L-piece-horizontal',
+		shape: [
+			[0, 0, 1],
+			[1, 1, 1],
 		],
 	},
 	{
@@ -40,14 +60,6 @@ const pieces = [
 			[1, 1],
 		],
 	},
-	/*{
-		name: 'S-piece',
-		shape: [
-			[1, 0],
-			[1, 1],
-			[0, 1],
-		],
-	},*/
 	{
 		name: 'T-piece',
 		shape: [
