@@ -1,32 +1,34 @@
+import Coordinate from './Coordinate'
+
 class Pixel {
-	constructor(data) {
+	constructor(image, data) {
 		// Initial data
-		this.col = data.col
-		this.row = data.row
-		this.value = data.value || 0
+		this.coordinate = new Coordinate(data.x, data.y);
+		this.value = data.value || 0; // 0 = unocuppied
 		
 		// Creat div and append
 		this.$div = document.createElement("div");
 		this.setInitialStyle(data.col, data.row)
-		BOARD.appendChild(this.$div)
 	}
 	
-	setInitialStyle() {
-		const bgX = IMAGE_WIDTH - this.col * PIXEL_SIZE + 'px '
-		const bgY = (this.row + 1) * PIXEL_SIZE + 'px'
+	setInitialStyle(image, data) {
+		const bgX = image.width - this.col * data.size + 'px '
+		const bgY = (this.row + 1) * data.size + 'px'
 
 		Object.assign(this.$div.style, {
-			width: `${PIXEL_SIZE}px`,
-			height: `${PIXEL_SIZE}px`,
+			width: `${data.size}px`,
+			height: `${data.size}px`,
 			border:  `1px solid #dddddd88`,
-			left: this.col * PIXEL_SIZE + 'px',
-			bottom: this.row * PIXEL_SIZE + 'px',
+			left: this.col * data.size + 'px',
+			bottom: this.row * data.size + 'px',
 			position:  'absolute',
 
 			// Background
-			background: `url(${IMG_SRC})`,
+			background: `url(${image.src})`,
 			backgroundPosition: bgX + bgY,
-			backgroundSize: `${IMAGE_WIDTH}px ${IMAGE_HEIGHT}px`,
+			backgroundSize: `${image.widthH}px ${image.height}px`,
 		})
 	}
 }
+
+export default Pixel

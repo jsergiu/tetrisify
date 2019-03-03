@@ -1,4 +1,4 @@
-class Block {
+class Piece {
 	constructor(data) {
 		// Initial data
 		this.shape = data.shape;
