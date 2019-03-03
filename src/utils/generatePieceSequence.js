@@ -1,4 +1,6 @@
+import { Matrix } from 'ml-matrix';
 import Piece from '../classes/Piece';
+import normalizeShapeMatrix from './normalizeShapeMatrix';
 import { getRandomShape } from './utils';
 
 /**
@@ -11,31 +13,48 @@ const generatePieceSequence = (game) => {
 	const sequence = [];
 
 	// Add pieces to the sequence until each rows is filled
-	for (let row = 0; row < game.rows - 1;) {
+	for (let row = 0; row < game.rows;) {
 		
 		console.log(`Processing row ${row}`);
 
 		// If the row is filled go to the next row
-		let done = game.rowIsFilled(0);
+		let done = game.rowIsFilled(row);
+		let piece = null;
 
 		//Add pieces untill the row is filled
 		while (!done) {
 
-			// Get a random shape
-			let randomShape = getRandomShape();
+			let piecePosition = false;
+			while (!piecePosition) {
+				// Get a random shape
+				let randomShape = getRandomShape();
+				
+				// Create a piece
+				piece = new Piece({
+					name: randomShape.name,
+					shape: randomShape.shape,
+					pixelSize: game.pixelSize,
+				});
+				
+				piecePosition = game.getRandomSlot(row, piece);
+			}
 
-			// Create a piece
-			let piece = new Piece({
-				name: randomShape.name,
-				shape: randomShape.shape,
-				pixelSize: game.pixelSize,
-			})
-			
-			console.log(piece)
-			game.getRandomSlot(row, piece)
+			// Normalize the shape matrix and add it to the game matrix so used pixes are set to 1
+			const normalizedShapedMatrix = normalizeShapeMatrix(
+				piece.shape,
+				piecePosition.row,
+				piecePosition.column,
+				game.matrix.rows,
+				game.matrix.columns
+			);
+			game.matrix = Matrix.add(game.matrix, normalizedShapedMatrix);
 
-			//let slot = getRandomSlot(row, piece)
-			done = true
+			// Set piece coordinates and add it to the sequence
+			piece.setCoordinates(piecePosition.column, piecePosition.row);
+			sequence.push(piece);
+			game.$wrapper.append(piece.$div);
+
+			done = game.rowIsFilled(row);
 		}
 
 
@@ -43,7 +62,7 @@ const generatePieceSequence = (game) => {
 		row++;
 	}
 	
-	//console.log(sequence)
+	console.log(sequence)
 
 	//let isDone = game.matrix.sum() > game.rows * game.columns - 5;
 	//while (!isDone) {

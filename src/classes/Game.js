@@ -77,7 +77,15 @@ export default class Game {
 
 			availableSlots.push({ row: searchRow, column: col })
 		}
-		console.log('available', availableSlots)
+
+		// If no available slots were found return false
+		if (availableSlots.length === 0) {
+			return false
+		}
+
+		// Return a random slot
+		return availableSlots[parseInt(Math.random() * availableSlots.length)]
 	}
+
 }
 	

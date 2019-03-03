@@ -2,7 +2,8 @@
 
 function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
 
-var Matrix = _interopDefault(require('ml-matrix'));
+var Matrix = require('ml-matrix');
+var Matrix__default = _interopDefault(Matrix);
 
 //import Pixel from './Pixel'
 
@@ -24,7 +25,7 @@ class Game {
 		this.rows = options.rows || parseInt(this.image.height / this.pixelSize);
 
 		this.applyWrapperStyle();
-		this.matrix = Matrix.zeros(this.rows, this.columns); // 1 = pixel not used
+		this.matrix = Matrix__default.zeros(this.rows, this.columns); // 1 = pixel not used
 	}
 
 	/** Needed so Pieces can have position absolute */
@@ -71,8 +72,8 @@ class Game {
 
 			// Test if the piece fits in the current position by adding the submatrix with the shape
 			const submatrix = this.matrix.subMatrix(startRow, endRow, startColumn, endColumn);
-			const shapeMatrix = new Matrix(piece.shape);
-			const sum = Matrix.add(submatrix, shapeMatrix);
+			const shapeMatrix = new Matrix__default(piece.shape);
+			const sum = Matrix__default.add(submatrix, shapeMatrix);
 			const maxIndex = sum.maxIndex();
 			
 			// If 2 is the max it means that the piece overlaps an used pixel in the grid
@@ -82,8 +83,16 @@ class Game {
 
 			availableSlots.push({ row: searchRow, column: col });
 		}
-		console.log('available', availableSlots);
+
+		// If no available slots were found return false
+		if (availableSlots.length === 0) {
+			return false
+		}
+
+		// Return a random slot
+		return availableSlots[parseInt(Math.random() * availableSlots.length)]
 	}
+
 }
 
 /**
@@ -203,37 +212,87 @@ class Piece {
 }
 
 /**
+ * Extend a shape to be the same size as the game matrix so they can be added
+ * @param {Matrix} shape Shape matrix used to describe a Piece
+ * @param {Number} startRow start row position of the piece, 0 is at the bottom
+ * @param {Number} startCol start column position of the piece, 0 is on the left
+ * @param {Number} totalRows total rows in the final matrix
+ * @param {Number} totalColumns total columns in the final matrix
+ */
+const normalizeShapeMatrix = (shape, startRow, startCol, totalRows, totalColumns) => {
+	// Create empty matrix
+	const m = Matrix.Matrix.zeros(totalRows, totalColumns);
+	const shapeMatrix = new Matrix.Matrix(shape);
+
+	// Add the used pixes of the shape to the matrix
+	for (let row = 0; row < shapeMatrix.rows; row++) {
+		for (let col = 0; col < shapeMatrix.columns; col++) {
+
+			const rowIndex = totalRows - 0 - startRow - shapeMatrix.rows + row;
+			const colIndex = startCol + col;
+
+			// Set pixel to 1 for each shape pixel
+			if (shapeMatrix.get(row, col) === 1) {
+				m.set(rowIndex, colIndex, 1);
+			}
+		}
+	}
+
+	return m
+};
+
+/**
  * Generate a sequence of pieces with their coordinates to make up the completed puzzle
  * @param {Object} game 
  */
 const generatePieceSequence = (game) => {
 
+	// The sequence of pieces as an array in cronological order
+	const sequence = [];
+
 	// Add pieces to the sequence until each rows is filled
-	for (let row = 0; row < game.rows - 1;) {
+	for (let row = 0; row < game.rows;) {
 		
 		console.log(`Processing row ${row}`);
 
 		// If the row is filled go to the next row
-		let done = game.rowIsFilled(0);
+		let done = game.rowIsFilled(row);
+		let piece = null;
 
 		//Add pieces untill the row is filled
 		while (!done) {
 
-			// Get a random shape
-			let randomShape = getRandomShape();
+			let piecePosition = false;
+			while (!piecePosition) {
+				// Get a random shape
+				let randomShape = getRandomShape();
+				
+				// Create a piece
+				piece = new Piece({
+					name: randomShape.name,
+					shape: randomShape.shape,
+					pixelSize: game.pixelSize,
+				});
+				
+				piecePosition = game.getRandomSlot(row, piece);
+			}
 
-			// Create a piece
-			let piece = new Piece({
-				name: randomShape.name,
-				shape: randomShape.shape,
-				pixelSize: game.pixelSize,
-			});
-			
-			console.log(piece);
-			game.getRandomSlot(row, piece);
+			// Normalize the shape matrix and add it to the game matrix so used pixes are set to 1
+			const normalizedShapedMatrix = normalizeShapeMatrix(
+				piece.shape,
+				piecePosition.row,
+				piecePosition.column,
+				game.matrix.rows,
+				game.matrix.columns
+			);
+			game.matrix = Matrix.Matrix.add(game.matrix, normalizedShapedMatrix);
 
-			//let slot = getRandomSlot(row, piece)
-			done = true;
+			// Set piece coordinates and add it to the sequence
+			piece.setCoordinates(piecePosition.column, piecePosition.row);
+			sequence.push(piece);
+			game.$wrapper.append(piece.$div);
+
+			done = game.rowIsFilled(row);
 		}
 
 
@@ -241,7 +300,7 @@ const generatePieceSequence = (game) => {
 		row++;
 	}
 	
-	//console.log(sequence)
+	console.log(sequence);
 
 	//let isDone = game.matrix.sum() > game.rows * game.columns - 5;
 	//while (!isDone) {
