@@ -5,6 +5,7 @@ export default class Game {
 	constructor($wrapper, options) {
 		this.$wrapper = $wrapper
 		this.$image = $wrapper.querySelector('img')
+		$wrapper.querySelector('img').style.opacity = '0.1';
 
 		// Get image attributes
 		this.image = {

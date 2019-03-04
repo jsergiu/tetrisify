@@ -1,0 +1,16 @@
+.Tetrisify-pixel {
+	display: inline-block;
+	box-sizing: border-box;
+	flex-grow: 0;
+	flex-shrink: 0;
+}
+
+.Tetrisify-imagePixel {
+	border:  1px solid #dddddd88;
+}
+
+.Tetrisify-piece {
+	display: flex;
+	flex-wrap: wrap;
+	position: absolute;
+}

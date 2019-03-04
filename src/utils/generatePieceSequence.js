@@ -15,7 +15,7 @@ const generatePieceSequence = (game) => {
 	// Add pieces to the sequence until each rows is filled
 	for (let row = 0; row < game.rows;) {
 		
-		console.log(`Processing row ${row}`);
+		//console.log(`Processing row ${row}`);
 
 		// If the row is filled go to the next row
 		let done = game.rowIsFilled(row);
@@ -34,6 +34,7 @@ const generatePieceSequence = (game) => {
 					name: randomShape.name,
 					shape: randomShape.shape,
 					pixelSize: game.pixelSize,
+					image: game.image,
 				});
 				
 				piecePosition = game.getRandomSlot(row, piece);
@@ -59,8 +60,7 @@ const generatePieceSequence = (game) => {
 		// Once all the pixels on one row are filled, go to the next row
 		row++;
 	}
-	
-	console.log(sequence)
+
 	return sequence;
 }
 

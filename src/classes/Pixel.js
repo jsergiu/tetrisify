@@ -1,32 +1,29 @@
-import Coordinate from './Coordinate'
 
+
+/**
+ * Multiple pixes compose one Piece
+ * Pixel should be calculated from the number of columns that the game matrix has
+ */
 class Pixel {
-	constructor(image, data) {
-		// Initial data
-		this.coordinate = new Coordinate(data.x, data.y);
-		this.value = data.value || 0; // 0 = unocuppied
+
+	/**
+	 * Make an instance of a transparent pixel
+	 * @param {Object} data {size }
+	 */
+	constructor(data) {
+		// Actual size of one pixel
+		this.size = data.size;
 		
 		// Creat div and append
 		this.$div = document.createElement("div");
-		this.setInitialStyle(data.col, data.row)
+		this.$div.setAttribute('class', 'Tetrisify-pixel');
+		this.setInitialStyle()
 	}
 	
-	setInitialStyle(image, data) {
-		const bgX = image.width - this.col * data.size + 'px '
-		const bgY = (this.row + 1) * data.size + 'px'
-
+	setInitialStyle(data) {
 		Object.assign(this.$div.style, {
-			width: `${data.size}px`,
-			height: `${data.size}px`,
-			border:  `1px solid #dddddd88`,
-			left: this.col * data.size + 'px',
-			bottom: this.row * data.size + 'px',
-			position:  'absolute',
-
-			// Background
-			background: `url(${image.src})`,
-			backgroundPosition: bgX + bgY,
-			backgroundSize: `${image.widthH}px ${image.height}px`,
+			height: `${this.size}px`,
+			flexBasis: `${this.size}px`,
 		})
 	}
 }

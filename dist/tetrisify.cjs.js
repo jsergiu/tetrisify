@@ -108,6 +108,71 @@ class Coordinate {
 }
 
 /**
+ * Multiple pixes compose one Piece
+ * Pixel should be calculated from the number of columns that the game matrix has
+ */
+class Pixel {
+
+	/**
+	 * Make an instance of a transparent pixel
+	 * @param {Object} data {size }
+	 */
+	constructor(data) {
+		// Actual size of one pixel
+		this.size = data.size;
+		
+		// Creat div and append
+		this.$div = document.createElement("div");
+		this.$div.setAttribute('class', 'Tetrisify-pixel');
+		this.setInitialStyle();
+	}
+	
+	setInitialStyle(data) {
+		Object.assign(this.$div.style, {
+			height: `${this.size}px`,
+			flexBasis: `${this.size}px`,
+		});
+	}
+}
+
+/**
+ * Multiple pixes compose one Piece
+ * Pixel should be calculated from the number of columns that the game matrix has
+ * x,y coordinates are relative to the game matrix
+ */
+class ImagePixel extends Pixel {
+
+	/**
+	 * Make an instance
+	 * @param {Obkect} image Image attributes
+	 * @param {Object} data 
+	 */
+	constructor(image, data) {
+		super(data);
+
+		// Initial data
+		this.coordinate = new Coordinate(data.x, data.y);
+		this.image = image;
+
+		this.$div.setAttribute('class', 'Tetrisify-pixel Tetrisify-imagePixel');
+		
+		//Add background image
+		this.addBackgroundStyle();
+	}
+
+	addBackgroundStyle() {
+		const bgX = this.image.width - this.x * this.size + 'px ';
+		const bgY = (this.y + 1) * this.size + 'px';
+
+		Object.assign(this.$div.style, {
+			//background: `url(${this.image.src})`,
+			backgroundPosition: bgX + bgY,
+			//backgroundSize: `${this.image.width}px ${this.image.height}px`,
+		});
+	}
+}
+
+/**
  * Each piece is represented as a matrix where
  * 1 = the pixes is on / selected
  * 0 = the pixes is off / not used
@@ -198,11 +263,13 @@ class Piece {
 		// Type checking
 		if (!data.shape) throw new Error('Tetrisify: shape parameter is missing')
 		if (!data.pixelSize) throw new Error('Tetrisify: pixelSize parameter is missing')
+		if (!data.image) throw new Error('Tetrisify: image parameter is missing')
 
 		// Initial datas
-		this.name = data.name;
-		this.shape = data.shape;
-		this.pixelSize = data.pixelSize;
+		this.name = data.name; 				// Optional name of the piece
+		this.shape = data.shape; 			// One of the items from the shapes file
+		this.pixelSize = data.pixelSize; 	// Calculated form puzzle resolution (no of columns)
+		this.image = data.image; 			// Object with attributes of the image that is animated
 
 		// Coordinates used for the falling animation
 		this.currentCoordinates = new Coordinate(-1000, -1000);
@@ -215,6 +282,7 @@ class Piece {
 		
 		// Create div and add css
 		this.$div = document.createElement("div");
+		this.$div.setAttribute('class', 'Tetrisify-piece');
 		this.setInitialStyle();
 	}
 	
@@ -226,6 +294,8 @@ class Piece {
 			width: width * this.pixelSize + 'px',
 			height: height * this.pixelSize + 'px',
 			position:  'absolute',
+			display: 'flex',
+			'flex-wrap': 'wrapp',
 
 			// Background
 			background: getRandomColor(),
@@ -242,6 +312,32 @@ class Piece {
 	setFinalCoordinates(x,y) {
 		this.finalCoordinates.setX(x);
 		this.finalCoordinates.setY(y);
+		this.generatePixels();
+	}
+	
+	generatePixels() {
+		// Remove previous children if any
+		this.$div.innerHTML = '';
+
+		for (let row = 0; row < this.shape.length; row++) {
+			for (let col = 0; col < this.shape[0].length; col++) {
+				
+				let p = null;
+
+				// Add transparent pixels for 0 values in the shape and ImagePixels for 1
+				if (this.shape[col] === 0) {
+					p = new Pixel({ size: this.pixelSize });
+				} else {
+					p = new ImagePixel(this.image, {
+						size: this.pixelSize,
+						x: this.finalCoordinates.getX() + col,
+						y: this.finalCoordinates.getY() + row,
+					});
+				}
+
+				this.$div.append(p.$div);
+			}
+		}
 	}
 
 }
@@ -307,6 +403,7 @@ const generatePieceSequence = (game) => {
 					name: randomShape.name,
 					shape: randomShape.shape,
 					pixelSize: game.pixelSize,
+					image: game.image,
 				});
 				
 				piecePosition = game.getRandomSlot(row, piece);

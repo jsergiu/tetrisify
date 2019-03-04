@@ -2,6 +2,8 @@ import Game from './classes/Game';
 import generatePieceSequence from './utils/generatePieceSequence';
 import animatePieces from './utils/animatePieces';
 
+import './style/index.css';
+
 export default function tetrisify(selector, options) {
 
 	const $wrapper = document.querySelector(selector)
