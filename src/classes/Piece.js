@@ -1,8 +1,6 @@
 import Coordinate from './Coordinate';
 import Pixel from './Pixel';
 import ImagePixel from './ImagePixel';
-import  { getRandomColor } from '../utils/utils';
-
 
 class Piece {
 	constructor(data) {

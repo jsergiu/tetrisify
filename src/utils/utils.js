@@ -7,15 +7,6 @@ export const getRandomShape = () => {
 	return shapes[random];
 }
 
-export const getRandomColor = () => {
-	var letters = '0123456789ABCDEF';
-	var color = '#';
-	for (var i = 0; i < 6; i++) {
-		color += letters[Math.floor(Math.random() * 16)];
-	}
-	return color;
-}
-
 /**
  * Get a random position for a block on a given row
  * @param {Number} row: On which row to search for empty slots
